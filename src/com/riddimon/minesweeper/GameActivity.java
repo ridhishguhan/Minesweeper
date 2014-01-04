@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Activity;
@@ -40,7 +41,7 @@ public class GameActivity extends Activity implements OnClickListener {
 	Button mCheat;
 	GridLayout mGrid;
 
-	TimerTask mTimer = null;
+	Timer mTimer = null;
 	static class Block {
 		public Block(int r, int c, int numNeighbors) {
 			this.r = r;
@@ -70,6 +71,7 @@ public class GameActivity extends Activity implements OnClickListener {
         setupWidgets();
         createGrid(saved);
         renderGrid();
+        mTimer = new Timer("cheat");
     }
 
     private void setupWidgets() {
@@ -212,6 +214,10 @@ public class GameActivity extends Activity implements OnClickListener {
     	gameOver = end;
     	invalidateOptionsMenu();
     	mCheat.setVisibility(gameOver ? View.INVISIBLE : View.VISIBLE);
+    	try {
+    		mTimer.cancel();
+    	} catch (Exception ex) {}
+    	mTimer = new Timer("cheat");
     }
 
     private boolean uncover(Block b) {
@@ -321,15 +327,71 @@ public class GameActivity extends Activity implements OnClickListener {
 		setGameStatus(true);
 	}
 
-	private void reveal(Block blk) {
-		
+	private void reveal() {
+		// can cheat only once
+		mCheat.setVisibility(View.INVISIBLE);
+		Block blk = null;
+		while (blk == null) {
+			Block block = mines.get((int) Math.random() * numMines);
+			blk = block.hasMine && !block.uncovered ? block : null;
+		}
+		final Block reveal = blk;
+		reveal.tv.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));
+		TimerTask task = new TimerTask() {
+			@Override
+			public void run() {
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						List<Block> blocksToCover = new LinkedList<Block>();
+						blocksToCover.add(reveal);
+						int row = reveal.r;
+						int column = reveal.c;
+		    			if (row != 0) {
+		    				blocksToCover.add(mBlocks[row - 1][column]);
+		        			if (column != 0) {
+		        				blocksToCover.add(mBlocks[row-1][column-1]);
+		        			}
+		        			if (column != numBlocks - 1) {
+		        				blocksToCover.add(mBlocks[row-1][column+1]);
+		        			}
+		    			}
+		    			if (row != numBlocks - 1) {
+		    				blocksToCover.add(mBlocks[row + 1][column]);
+		        			if (column != 0) {
+		        				blocksToCover.add(mBlocks[row+1][column-1]);
+		        			}
+		        			if (column != numBlocks - 1) {
+		        				blocksToCover.add(mBlocks[row+1][column+1]);
+		        			}
+		    			}
+		    			if (column != 0) {
+		    				blocksToCover.add(mBlocks[row][column-1]);
+		    			}
+		    			if (column != numBlocks - 1) {
+		    				blocksToCover.add(mBlocks[row][column+1]);
+		    			}
+						for (Block b : blocksToCover) {
+							b.uncovered = false;
+							b.tv.setBackgroundResource(R.drawable.covered);
+						}
+					}
+				});
+			}
+			
+		};
+		try {
+			mTimer.schedule(task, 5000);
+		} catch(Exception ex) {
+			// nothing here
+		}
 	}
 
 	@Override
 	public void onClick(View v) {
 		switch(v.getId()) {
 		case R.id.cheat:
-			
+			reveal();
 			break;
 		}
 	}
