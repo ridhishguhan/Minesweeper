@@ -9,5 +9,7 @@
     <string name="you_lose">You Lose!!</string>
     <string name="game_over_start_a_new_game">Game Over! Start a new game..</string>
     <string name="new_game">New Game</string>
+    <string name="awesome_you_won">Awesome! You won!</string>
+    <string name="missed_mines">Oops! You missed a few.. and lost.. :(</string>
 
 </resources>

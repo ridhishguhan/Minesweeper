@@ -1,6 +1,9 @@
 package com.riddimon.minesweeper;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TimerTask;
@@ -32,6 +35,7 @@ public class GameActivity extends Activity implements OnClickListener {
 	int numBlocks = 8;
 	int numMines = 10;
 	boolean gameOver = false;
+	ArrayList<Block> mines = null;
 
 	Button mCheat;
 	GridLayout mGrid;
@@ -76,7 +80,7 @@ public class GameActivity extends Activity implements OnClickListener {
 
     private void createGrid(Bundle saved) {
     	mBlocks = new Block[numBlocks][numBlocks];
-
+    	mines = new ArrayList<Block>(numMines);
     	for (int i = 0; i < numBlocks; i++) {
     		for (int j = 0; j < numBlocks; j++) {
     			mBlocks[i][j] = new Block(i, j, false);
@@ -88,6 +92,7 @@ public class GameActivity extends Activity implements OnClickListener {
     		int row = (block / numBlocks);
     		int column = block % numBlocks;
     		if (!mBlocks[row][column].hasMine) {
+    			mines.add(mBlocks[row][column]);
     			i++;
     			mBlocks[row][column].hasMine = true;
     			if (row != 0) {
@@ -284,15 +289,47 @@ public class GameActivity extends Activity implements OnClickListener {
 			renderGrid();
 			break;
 		case 1:
+			validate();
 		}
 		return true;
+	}
+
+	private void validate() {
+		List<Block> found = new LinkedList<Block>();
+		List<Block> missed = new LinkedList<Block>();
+		for (Block mine : mines) {
+			if (mine.uncovered) {
+				found.add(mine);
+			} else {
+				missed.add(mine);
+			}
+		}
+		for (Block blk : found) {
+			blk.tv.setBackgroundColor(getResources().getColor(android.R.color
+					.holo_green_light));
+		}
+		for (Block blk : missed) {
+			blk.tv.setBackgroundColor(getResources().getColor(android.R.color
+					.holo_red_light));
+		}
+		if (missed.size() == 0) {
+			Toast.makeText(this, R.string.awesome_you_won, Toast.LENGTH_SHORT).show();
+		} else {
+			Toast.makeText(this, R.string.missed_mines, Toast.LENGTH_SHORT)
+					.show();
+		}
+		setGameStatus(true);
+	}
+
+	private void reveal(Block blk) {
+		
 	}
 
 	@Override
 	public void onClick(View v) {
 		switch(v.getId()) {
 		case R.id.cheat:
-			//show mines and cover up 8 blocks around each mine after 3 seconds
+			
 			break;
 		}
 	}
