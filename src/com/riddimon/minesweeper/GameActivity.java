@@ -374,6 +374,7 @@ public class GameActivity extends Activity implements OnClickListener {
 						for (Block b : blocksToCover) {
 							b.uncovered = false;
 							b.tv.setBackgroundResource(R.drawable.covered);
+							b.tv.setText("");
 						}
 					}
 				});
